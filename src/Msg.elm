@@ -3,11 +3,16 @@ module Msg exposing
     , decode
     )
 
+import Body
+import Header
 import Json.Decode as D exposing (Decoder, Value)
 
 
 type Msg
-    = MsgDecodeFailed D.Error
+    = HeaderMsg Header.Msg
+    | BodyMsg Body.Msg
+    | WindowResized Int Int
+    | MsgDecodeFailed D.Error
 
 
 decode : Value -> Msg

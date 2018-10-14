@@ -2,7 +2,7 @@ module Style exposing
     ( borderNone
     , center
     , fontSmoothingNone
-    , globalStyles
+    , globals
     , hfnss
     , indent
     , outdent
@@ -15,13 +15,17 @@ import Html.Styled as Html exposing (Html)
 import Style.Units as Units
 
 
-globalStyles : Html msg
-globalStyles =
+globals : Html msg
+globals =
     [ Css.Global.p
         [ color Ct.content4
-        , margin (px 0)
         , fontSmoothingNone
         , hfnss
+        ]
+    , Css.Global.everything
+        [ boxSizing borderBox
+        , margin zero
+        , padding zero
         ]
     ]
         |> global
@@ -34,20 +38,20 @@ borderNone =
 
 indent : Style
 indent =
-    [ borderLeft3 Units.size0 solid Ct.content0
-    , borderTop3 Units.size0 solid Ct.content0
-    , borderRight3 Units.size0 solid Ct.content2
-    , borderBottom3 Units.size0 solid Ct.content2
+    [ borderLeft3 (px Units.size0) solid Ct.content0
+    , borderTop3 (px Units.size0) solid Ct.content0
+    , borderRight3 (px Units.size0) solid Ct.content2
+    , borderBottom3 (px Units.size0) solid Ct.content2
     ]
         |> Css.batch
 
 
 outdent : Style
 outdent =
-    [ borderLeft3 Units.size0 solid Ct.content2
-    , borderTop3 Units.size0 solid Ct.content2
-    , borderRight3 Units.size0 solid Ct.content0
-    , borderBottom3 Units.size0 solid Ct.content0
+    [ borderLeft3 (px Units.size0) solid Ct.content2
+    , borderTop3 (px Units.size0) solid Ct.content2
+    , borderRight3 (px Units.size0) solid Ct.content0
+    , borderBottom3 (px Units.size0) solid Ct.content0
     ]
         |> Css.batch
 

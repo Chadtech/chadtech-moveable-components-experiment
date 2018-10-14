@@ -1,8 +1,7 @@
-module Old.View.Button exposing
+module View.Button exposing
     ( disabled
     , margins
-    , primary
-    , secondary
+    , styles
     , view
     )
 
@@ -26,7 +25,7 @@ view attrs label =
 
 margins : Style
 margins =
-    margin2 zero Units.size1
+    margin2 zero (px Units.size1)
 
 
 disabled : Style
@@ -39,13 +38,19 @@ disabled =
         |> Css.batch
 
 
-primary : Style
-primary =
-    secondary
+selected : Style
+selected =
+    [ basic
+    , backgroundColor Ct.content1
+    , color Ct.content5
+    , Style.indent
+    , hover [ color Ct.content5 ]
+    ]
+        |> Css.batch
 
 
-secondary : Style
-secondary =
+styles : Style
+styles =
     [ basic
     , backgroundColor Ct.content1
     , color Ct.content4
@@ -65,10 +70,10 @@ basic =
     [ Style.hfnss
     , Style.fontSmoothingNone
     , outline none
-    , minWidth Units.size6
-    , height Units.size4
+    , minWidth (px Units.size6)
+    , height (px Units.size4)
     , boxSizing borderBox
-    , padding2 zero Units.size3
+    , padding2 zero (px Units.size3)
     , cursor pointer
     , Style.outdent
     ]

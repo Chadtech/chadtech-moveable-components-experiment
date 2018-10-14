@@ -18,83 +18,83 @@ import Css exposing (..)
 
 {-| 2
 -}
-size0 : Px
+size0 : Float
 size0 =
-    px 2
+    2
 
 
 {-| 4
 -}
-size1 : Px
+size1 : Float
 size1 =
-    px 4
+    4
 
 
 {-| 8
 -}
-size2 : Px
+size2 : Float
 size2 =
-    px 8
+    8
 
 
 {-| 16
 -}
-size3 : Px
+size3 : Float
 size3 =
-    px 16
+    16
 
 
 {-| 32
 -}
-size4 : Px
+size4 : Float
 size4 =
-    px 32
+    32
 
 
 {-| 64
 -}
-size5 : Px
+size5 : Float
 size5 =
-    px 64
+    64
 
 
 {-| 128
 -}
-size6 : Px
+size6 : Float
 size6 =
-    px 128
+    128
 
 
 {-| 256
 -}
-size7 : Px
+size7 : Float
 size7 =
-    px 256
+    256
 
 
 {-| 384
 -}
-size8 : Px
+size8 : Float
 size8 =
-    px 384
+    384
 
 
 {-| 512
 -}
-size9 : Px
+size9 : Float
 size9 =
-    px 512
+    512
 
 
 {-| 640
 -}
-size10 : Px
+size10 : Float
 size10 =
-    px 640
+    640
 
 
 {-| 1024
 -}
-size11 : Px
+size11 : Float
 size11 =
-    px 1024
+    1024

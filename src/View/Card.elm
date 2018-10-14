@@ -1,16 +1,6 @@
 module View.Card exposing
     ( body
-    , extraLargeHeight
-    , extraLargeWidth
-    , extraSmallHeight
-    , extraSmallWidth
     , header
-    , largeHeight
-    , largeWidth
-    , mediumHeight
-    , mediumWidth
-    , smallHeight
-    , smallWidth
     , view
     )
 
@@ -21,6 +11,7 @@ import Css.Global as Global
 import Html.Grid as Grid
 import Html.Styled as Html exposing (Html, node)
 import Html.Styled.Attributes as Attrs exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Style as Style
 import Style.Units as Units
 import View.Button as Button
@@ -49,23 +40,23 @@ containerStyle =
         |> Css.batch
 
 
-type alias HeaderModel =
+type alias HeaderPayload msg =
     { title : String
-    , shouldShowCloseButton : Bool
+    , closeClickHandler : Maybe msg
     }
 
 
-header : HeaderModel -> Html msg
+header : HeaderPayload msg -> Html msg
 header model =
     Grid.row
         []
         [ Grid.column
-            [ padding Units.size1
+            [ padding (px Units.size1)
             , displayFlex
-            , backgroundColor Ct.content4
-            , margin Units.size0
+            , backgroundColor Ct.content3
+            , margin (px Units.size0)
             ]
-            [ closeButton model.shouldShowCloseButton
+            [ closeButton model.closeClickHandler
             , Html.node "card-header"
                 [ css [ headerStyle ] ]
                 [ Html.p
@@ -76,22 +67,24 @@ header model =
         ]
 
 
-closeButton : Bool -> Html msg
-closeButton shouldShowCloseButton =
-    if shouldShowCloseButton then
-        Button.view
-            [ css
-                [ Button.secondary
-                , width Units.size4
-                , minWidth Units.size4
-                , padding zero
-                , paddingBottom (px 2)
+closeButton : Maybe msg -> Html msg
+closeButton closeClickHandler =
+    case closeClickHandler of
+        Just msg ->
+            Button.view
+                [ css
+                    [ Button.styles
+                    , width (px Units.size4)
+                    , minWidth (px Units.size4)
+                    , padding zero
+                    , paddingBottom (px 2)
+                    ]
+                , onClick msg
                 ]
-            ]
-            "x"
+                "x"
 
-    else
-        Html.text ""
+        Nothing ->
+            Html.text ""
 
 
 headerCloseButton : Html msg
@@ -104,8 +97,8 @@ headerCloseButton =
 headerCloseButtonStyle : Style
 headerCloseButtonStyle =
     [ position absolute
-    , width Units.size4
-    , height Units.size4
+    , width (px Units.size4)
+    , height (px Units.size4)
     , padding zero
     , paddingBottom (px 2)
     , Style.indent
@@ -120,7 +113,7 @@ headerCloseButtonStyle =
 headerTextStyle : Style
 headerTextStyle =
     [ color Ct.content0
-    , lineHeight Units.size4
+    , lineHeight (px Units.size4)
     , textAlign center
     ]
         |> Css.batch
@@ -128,7 +121,7 @@ headerTextStyle =
 
 headerStyle : Style
 headerStyle =
-    [ height Units.size4
+    [ height (px Units.size4)
     , flex (int 1)
     , position relative
     ]
@@ -140,7 +133,7 @@ body children =
     Grid.row
         []
         [ Grid.column
-            [ padding Units.size1
+            [ padding (px Units.size1)
             , flexDirection column
             ]
             [ Html.node "card-body"
@@ -160,53 +153,3 @@ bodyStyle =
     , flexDirection column
     ]
         |> Css.batch
-
-
-extraSmallWidth : Style
-extraSmallWidth =
-    width Units.size8
-
-
-extraSmallHeight : Style
-extraSmallHeight =
-    height Units.size7
-
-
-smallWidth : Style
-smallWidth =
-    width Units.size8
-
-
-smallHeight : Style
-smallHeight =
-    height Units.size8
-
-
-mediumWidth : Style
-mediumWidth =
-    width Units.size8
-
-
-mediumHeight : Style
-mediumHeight =
-    height Units.size9
-
-
-largeWidth : Style
-largeWidth =
-    width Units.size10
-
-
-largeHeight : Style
-largeHeight =
-    height Units.size9
-
-
-extraLargeWidth : Style
-extraLargeWidth =
-    width Units.size9
-
-
-extraLargeHeight : Style
-extraLargeHeight =
-    height Units.size10
