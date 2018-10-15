@@ -7,13 +7,14 @@ module Window.Welcome exposing
     , title
     , update
     , view
-    , width
     )
 
 import Css exposing (..)
-import Data.Size exposing (Size)
+import Data.Position as Position
+import Data.Size as Size exposing (Size)
 import Html.Styled as Html exposing (Html)
 import Id exposing (Id)
+import Session exposing (Session)
 import Style.Units as Units
 import View.Card as Card
 
@@ -23,16 +24,21 @@ import View.Card as Card
 
 
 type alias Model =
-    {}
+    { card : Card.Model }
 
 
 type Msg
     = Noop
 
 
-init : Model
-init =
-    {}
+init : Session -> Model
+init session =
+    { card =
+        session.windowSize
+            |> Size.center
+            |> Position.subtractFromX (width / 2)
+            |> Card.initFromPosition
+    }
 
 
 id : Id
@@ -57,23 +63,33 @@ update msg model =
 
 title : Model -> String
 title _ =
-    "Welcome to CtOS"
+    "welcome"
 
 
-view : Model -> Html Msg
+view : Model -> List (Html Msg)
 view model =
-    Html.p [] [ Html.text "WELCOME!!" ]
+    [ Card.body
+        [ Html.p
+            []
+            [ Html.text
+                """
+            What would you like to open?          
+            """
+            ]
+        ]
+    ]
 
 
 
 -- STYLE --
 
 
-width : Model -> Float
-width _ =
-    Units.size8
-
-
 cardStyle : Model -> Style
 cardStyle _ =
-    Css.batch []
+    [ Css.width (px width) ]
+        |> Css.batch
+
+
+width : Float
+width =
+    Units.size9

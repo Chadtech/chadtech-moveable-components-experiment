@@ -1,8 +1,7 @@
 module Window exposing
-    ( Model
-    , Msg
-    , Window(..)
-    , initWelcome
+    ( Msg
+    , cardStyle
+    , title
     , update
     , view
     )
@@ -10,8 +9,11 @@ module Window exposing
 import Css exposing (..)
 import Data.Position exposing (Position)
 import Data.Size as Size
+import Data.Window as Window exposing (Window(..))
 import Db exposing (Db)
 import Html.Styled as Html exposing (Html)
+import Id exposing (Id)
+import Model exposing (Model)
 import Session exposing (Session)
 import View.Card as Card
 import Window.Welcome as Welcome
@@ -21,76 +23,85 @@ import Window.Welcome as Welcome
 -- TYPES --
 
 
-type alias Model =
-    { position : Position
-    , window : Window
-    }
-
-
-type Window
-    = Welcome Welcome.Model
-
-
 type Msg
-    = WelcomeMsg Welcome.Msg
-
-
-setWindow : Window -> Model -> Model
-setWindow window model =
-    { model | window = window }
-
-
-initWelcome : Session -> Db Model -> Db Model
-initWelcome session =
-    Db.insert
-        Welcome.id
-        { position = Size.center session.windowSize
-        , window = Welcome Welcome.init
-        }
+    = CloseClicked
+    | CardMsg Card.Msg
+    | WelcomeMsg Welcome.Msg
 
 
 
 -- UPDATE --
 
 
-update : Msg -> Model -> Model
-update msg model =
-    case ( msg, model.window ) of
-        ( WelcomeMsg subMsg, Welcome welcomeModel ) ->
-            { model
-                | window =
-                    welcomeModel
-                        |> Welcome.update subMsg
-                        |> Welcome
-            }
+update : Id -> Msg -> Model -> Model
+update id msg =
+    case msg of
+        CloseClicked ->
+            Model.removeWindow id
+
+        CardMsg subMsg ->
+            updateCard id subMsg
+
+        WelcomeMsg subMsg ->
+            updateWelcome id subMsg
+
+
+updateCard : Id -> Card.Msg -> Model -> Model
+updateCard id msg =
+    Card.update msg
+        |> Window.mapCard
+        |> Model.mapWindow id
+
+
+updateWelcome : Id -> Welcome.Msg -> Model -> Model
+updateWelcome id msg =
+    Welcome.update msg
+        |> Window.mapWelcome
+        |> Model.mapWindow id
 
 
 
 -- VIEW --
 
 
-view : Model -> Html Msg
-view model =
-    case model.window of
+view : Window -> Html Msg
+view window =
+    Card.view
+        { title = title window
+        , closeClickHandler = Just CloseClicked
+        , positioning =
+            ( CardMsg
+            , Window.card window
+            )
+                |> Just
+        }
+        [ cardStyle window ]
+        (viewContent window)
+
+
+viewContent : Window -> List (Html Msg)
+viewContent window =
+    case window of
         Welcome subModel ->
-            let
-                windowWidth : Float
-                windowWidth =
-                    Welcome.width subModel
-            in
-            Card.view
-                [ Welcome.cardStyle subModel
-                , width (px windowWidth)
-                , position absolute
-                , top (px model.position.y)
-                , (model.position.x - (windowWidth / 2))
-                    |> px
-                    |> left
-                ]
-                [ Card.header
-                    { title = Welcome.title subModel
-                    , closeClickHandler = Nothing
-                    }
-                , Welcome.view subModel
-                ]
-                |> Html.map WelcomeMsg
+            subModel
+                |> Welcome.view
+                |> mapManyHtml WelcomeMsg
+
+
+mapManyHtml : (a -> b) -> List (Html a) -> List (Html b)
+mapManyHtml f =
+    List.map (Html.map f)
+
+
+cardStyle : Window -> Style
+cardStyle window =
+    case window of
+        Welcome subModel ->
+            Welcome.cardStyle subModel
+
+
+title : Window -> String
+title window =
+    case window of
+        Welcome subModel ->
+            Welcome.title subModel

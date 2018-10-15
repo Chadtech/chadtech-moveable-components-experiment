@@ -1,26 +1,136 @@
 module View.Card exposing
-    ( body
-    , header
+    ( Model
+    , Msg
+    , Payload
+    , body
+    , initFromPosition
+    , mapIn
+    , subscriptions
+    , update
     , view
     )
 
+import Browser.Events exposing (onMouseMove)
 import Chadtech.Colors as Ct
 import Css exposing (..)
 import Css.Animations as Animations
 import Css.Global as Global
+import Data.Position exposing (Position)
+import Html.Events.Extra.Mouse as Mouse
 import Html.Grid as Grid
 import Html.Styled as Html exposing (Html, node)
 import Html.Styled.Attributes as Attrs exposing (css)
 import Html.Styled.Events exposing (onClick)
+import Json.Decode as D exposing (Decoder)
 import Style as Style
 import Style.Units as Units
 import View.Button as Button
 
 
-view : List Style -> List (Html msg) -> Html msg
-view styles =
+
+-- TYPES --
+
+
+type Msg
+    = MouseDown Mouse.Event
+    | MouseMove D.Value
+
+
+type MouseState
+    = ReadyForClick
+    | ClickAt ( Float, Float )
+
+
+type alias Model =
+    { x : Float
+    , y : Float
+    , mouseState : MouseState
+    }
+
+
+mapIn : (Model -> Model) -> { a | card : Model } -> { a | card : Model }
+mapIn f record =
+    { record | card = f record.card }
+
+
+initFromPosition : Position -> Model
+initFromPosition position =
+    { x = position.x
+    , y = position.y
+    , mouseState = ReadyForClick
+    }
+
+
+type alias Payload msg =
+    { title : String
+    , closeClickHandler : Maybe msg
+    , positioning : Maybe ( Msg -> msg, Model )
+    }
+
+
+
+-- SUBSCRIPTIONS --
+
+
+subscriptions : Sub Msg
+subscriptions =
+    [ onMouseMove (D.map MouseMove D.value)
+    ]
+        |> Sub.batch
+
+
+
+-- UPDATE --
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        MouseDown { offsetPos } ->
+            let
+                ( x, y ) =
+                    offsetPos
+            in
+            { model
+                | mouseState =
+                    ClickAt ( x - 8, y - 42 )
+            }
+
+        MouseMove json ->
+            let
+                _ =
+                    Debug.log "MOVING" json
+            in
+            model
+
+
+
+-- VIEW --
+
+
+view : Payload msg -> List Style -> List (Html msg) -> Html msg
+view payload styles children =
     Html.node "card"
-        [ css [ Css.batch styles, containerStyle ] ]
+        [ css
+            [ Css.batch styles
+            , containerStyle
+            , Css.batch (positioningStyles payload)
+            ]
+        ]
+        (viewHeader payload :: children)
+
+
+positioningStyles : Payload msg -> List Style
+positioningStyles payload =
+    case payload.positioning of
+        Just ( _, model ) ->
+            [ position absolute
+            , left (px model.x)
+            , top (px model.y)
+            ]
+
+        Nothing ->
+            []
 
 
 containerStyle : Style
@@ -40,14 +150,8 @@ containerStyle =
         |> Css.batch
 
 
-type alias HeaderPayload msg =
-    { title : String
-    , closeClickHandler : Maybe msg
-    }
-
-
-header : HeaderPayload msg -> Html msg
-header model =
+viewHeader : Payload msg -> Html msg
+viewHeader payload =
     Grid.row
         []
         [ Grid.column
@@ -56,15 +160,36 @@ header model =
             , backgroundColor Ct.content3
             , margin (px Units.size0)
             ]
-            [ closeButton model.closeClickHandler
-            , Html.node "card-header"
-                [ css [ headerStyle ] ]
-                [ Html.p
-                    [ css [ headerTextStyle ] ]
-                    [ Html.text model.title ]
-                ]
+            [ closeButton payload.closeClickHandler
+            , headerContent payload
             ]
         ]
+
+
+headerContent : Payload msg -> Html msg
+headerContent payload =
+    case payload.positioning of
+        Just ( toMsg, model ) ->
+            Html.node "card-header"
+                [ css
+                    [ headerStyle ]
+                , Mouse.onDown MouseDown
+                    |> Attrs.fromUnstyled
+                ]
+                [ title payload.title ]
+                |> Html.map toMsg
+
+        Nothing ->
+            Html.node "card-header"
+                [ css [ headerStyle ] ]
+                [ title payload.title ]
+
+
+title : String -> Html msg
+title str =
+    Html.p
+        [ css [ headerTextStyle ] ]
+        [ Html.text str ]
 
 
 closeButton : Maybe msg -> Html msg

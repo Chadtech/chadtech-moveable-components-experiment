@@ -5,12 +5,14 @@ module Body exposing
     )
 
 import Css exposing (..)
+import Data.Window exposing (Window)
 import Db
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes as Attrs
 import Id exposing (Id)
 import Model exposing (Model)
-import Window exposing (Window)
+import View.Card as Card
+import Window
 
 
 
@@ -26,13 +28,10 @@ type Msg
 
 
 update : Msg -> Model -> Model
-update msg model =
+update msg =
     case msg of
         WindowMsg id subMsg ->
-            Model.mapWindow
-                id
-                (Window.update subMsg)
-                model
+            Window.update id subMsg
 
 
 
@@ -56,8 +55,8 @@ containerStyle =
         |> Css.batch
 
 
-viewWindow : ( Id, Window.Model ) -> Html Msg
-viewWindow ( id, model ) =
-    model
-        |> Window.view
-        |> Html.map (WindowMsg id)
+viewWindow : ( Id, Window ) -> Html Msg
+viewWindow ( id, window ) =
+    Html.map
+        (WindowMsg id)
+        (Window.view window)

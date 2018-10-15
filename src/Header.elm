@@ -37,9 +37,7 @@ update msg model =
                 Model.setTopWindow Welcome.id model
 
             else
-                Model.mapWindows
-                    (Window.initWelcome model.session)
-                    model
+                Model.initWelcomeWindow model
 
 
 
