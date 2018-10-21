@@ -3,22 +3,28 @@ module View.Card exposing
     , Msg
     , Payload
     , body
+    , closeButton
+    , header
+    , headerContent
+    , headerMouseEvents
+    , headerTitle
     , initFromPosition
-    , mapIn
+    , positioningStyle
     , subscriptions
+    , unfocusedHeader
     , update
     , view
     )
 
-import Browser.Events exposing (onMouseMove)
+import Browser.Events exposing (onMouseMove, onMouseUp)
 import Chadtech.Colors as Ct
 import Css exposing (..)
 import Css.Animations as Animations
 import Css.Global as Global
-import Data.Position exposing (Position)
+import Data.Position as Position exposing (Position)
 import Html.Events.Extra.Mouse as Mouse
 import Html.Grid as Grid
-import Html.Styled as Html exposing (Html, node)
+import Html.Styled as Html exposing (Attribute, Html, node)
 import Html.Styled.Attributes as Attrs exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Json.Decode as D exposing (Decoder)
@@ -32,13 +38,14 @@ import View.Button as Button
 
 
 type Msg
-    = MouseDown Mouse.Event
-    | MouseMove D.Value
+    = MouseDown ( Float, Float )
+    | MouseMove Position
+    | MouseUp Position
 
 
 type MouseState
     = ReadyForClick
-    | ClickAt ( Float, Float )
+    | ClickAt Float Float
 
 
 type alias Model =
@@ -48,9 +55,22 @@ type alias Model =
     }
 
 
-mapIn : (Model -> Model) -> { a | card : Model } -> { a | card : Model }
-mapIn f record =
-    { record | card = f record.card }
+setMouseState : MouseState -> Model -> Model
+setMouseState mouseState model =
+    { model | mouseState = mouseState }
+
+
+subtractPosition : Position -> Model -> Model
+subtractPosition position model =
+    case model.mouseState of
+        ClickAt clickAtX clickAtY ->
+            { model
+                | x = position.x - clickAtX
+                , y = position.y - clickAtY
+            }
+
+        _ ->
+            model
 
 
 initFromPosition : Position -> Model
@@ -72,11 +92,22 @@ type alias Payload msg =
 -- SUBSCRIPTIONS --
 
 
-subscriptions : Sub Msg
-subscriptions =
-    [ onMouseMove (D.map MouseMove D.value)
-    ]
-        |> Sub.batch
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.mouseState of
+        ReadyForClick ->
+            Sub.none
+
+        ClickAt _ _ ->
+            [ onMouseMove (mouseCtor MouseMove)
+            , onMouseUp (mouseCtor MouseUp)
+            ]
+                |> Sub.batch
+
+
+mouseCtor : (Position -> Msg) -> Decoder Msg
+mouseCtor ctor =
+    D.map ctor Position.browserDecoder
 
 
 
@@ -86,51 +117,33 @@ subscriptions =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        MouseDown { offsetPos } ->
-            let
-                ( x, y ) =
-                    offsetPos
-            in
-            { model
-                | mouseState =
-                    ClickAt ( x - 8, y - 42 )
-            }
+        MouseDown ( x, y ) ->
+            setMouseState
+                (ClickAt (x + 40) (y + 71))
+                model
 
-        MouseMove json ->
-            let
-                _ =
-                    Debug.log "MOVING" json
-            in
+        MouseMove mousePosition ->
             model
+                |> subtractPosition mousePosition
+
+        MouseUp mousePosition ->
+            model
+                |> subtractPosition mousePosition
+                |> setMouseState ReadyForClick
 
 
 
 -- VIEW --
 
 
-view : Payload msg -> List Style -> List (Html msg) -> Html msg
-view payload styles children =
+view : List Style -> List (Html msg) -> Html msg
+view styles =
     Html.node "card"
         [ css
             [ Css.batch styles
             , containerStyle
-            , Css.batch (positioningStyles payload)
             ]
         ]
-        (viewHeader payload :: children)
-
-
-positioningStyles : Payload msg -> List Style
-positioningStyles payload =
-    case payload.positioning of
-        Just ( _, model ) ->
-            [ position absolute
-            , left (px model.x)
-            , top (px model.y)
-            ]
-
-        Nothing ->
-            []
 
 
 containerStyle : Style
@@ -150,8 +163,17 @@ containerStyle =
         |> Css.batch
 
 
-viewHeader : Payload msg -> Html msg
-viewHeader payload =
+positioningStyle : Model -> Style
+positioningStyle model =
+    [ position absolute
+    , left (px model.x)
+    , top (px model.y)
+    ]
+        |> Css.batch
+
+
+header : List Style -> List (Html msg) -> Html msg
+header styles children =
     Grid.row
         []
         [ Grid.column
@@ -159,57 +181,50 @@ viewHeader payload =
             , displayFlex
             , backgroundColor Ct.content3
             , margin (px Units.size0)
+            , Css.batch styles
             ]
-            [ closeButton payload.closeClickHandler
-            , headerContent payload
-            ]
+            children
         ]
 
 
-headerContent : Payload msg -> Html msg
-headerContent payload =
-    case payload.positioning of
-        Just ( toMsg, model ) ->
-            Html.node "card-header"
-                [ css
-                    [ headerStyle ]
-                , Mouse.onDown MouseDown
-                    |> Attrs.fromUnstyled
-                ]
-                [ title payload.title ]
-                |> Html.map toMsg
-
-        Nothing ->
-            Html.node "card-header"
-                [ css [ headerStyle ] ]
-                [ title payload.title ]
+unfocusedHeader : Style
+unfocusedHeader =
+    backgroundColor Ct.content2
 
 
-title : String -> Html msg
-title str =
+headerContent : List (Attribute msg) -> List (Html msg) -> Html msg
+headerContent attrs =
+    Html.node "card-header"
+        (css [ headerStyle ] :: attrs)
+
+
+headerMouseEvents : List (Attribute Msg)
+headerMouseEvents =
+    [ Mouse.onDown (MouseDown << .offsetPos)
+        |> Attrs.fromUnstyled
+    ]
+
+
+headerTitle : String -> Html msg
+headerTitle str =
     Html.p
         [ css [ headerTextStyle ] ]
         [ Html.text str ]
 
 
-closeButton : Maybe msg -> Html msg
-closeButton closeClickHandler =
-    case closeClickHandler of
-        Just msg ->
-            Button.view
-                [ css
-                    [ Button.styles
-                    , width (px Units.size4)
-                    , minWidth (px Units.size4)
-                    , padding zero
-                    , paddingBottom (px 2)
-                    ]
-                , onClick msg
-                ]
-                "x"
-
-        Nothing ->
-            Html.text ""
+closeButton : msg -> Html msg
+closeButton msg =
+    Button.view
+        [ css
+            [ Button.styles
+            , width (px Units.size4)
+            , minWidth (px Units.size4)
+            , padding zero
+            , paddingBottom (px 2)
+            ]
+        , onClick msg
+        ]
+        "x"
 
 
 headerCloseButton : Html msg

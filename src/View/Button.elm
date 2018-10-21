@@ -1,6 +1,7 @@
 module View.Button exposing
     ( disabled
     , margins
+    , selected
     , styles
     , view
     )

@@ -17,6 +17,7 @@ import Ports exposing (JsMsg)
 import Return2 as R2
 import Session
 import Style
+import Window
 
 
 
@@ -65,9 +66,10 @@ init json =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
+subscriptions model =
     [ Ports.fromJs Msg.decode
     , Browser.Events.onResize WindowResized
+    , Sub.map BodyMsg (Body.subscriptions model)
     ]
         |> Sub.batch
 
@@ -113,7 +115,8 @@ view result =
                     []
                     [ Grid.column
                         []
-                        [ Header.view
+                        [ model
+                            |> Header.view
                             |> Html.map HeaderMsg
                         ]
                     ]

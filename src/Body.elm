@@ -1,5 +1,6 @@
 module Body exposing
     ( Msg
+    , subscriptions
     , update
     , view
     )
@@ -24,6 +25,22 @@ type Msg
 
 
 
+-- SUBSCRIPTIONS --
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model.topWindow of
+        Just topWindowsId ->
+            Sub.map
+                (WindowMsg topWindowsId)
+                (Window.subscriptions topWindowsId model)
+
+        Nothing ->
+            Sub.none
+
+
+
 -- UPDATE --
 
 
@@ -40,9 +57,10 @@ update msg =
 
 view : Model -> Html Msg
 view model =
-    model.windows
-        |> Db.toList
-        |> List.map viewWindow
+    model
+        |> Model.windows
+        |> List.reverse
+        |> List.map (viewWindow model.topWindow)
         |> Html.section
             [ Attrs.css [ containerStyle ] ]
 
@@ -55,8 +73,8 @@ containerStyle =
         |> Css.batch
 
 
-viewWindow : ( Id, Window ) -> Html Msg
-viewWindow ( id, window ) =
+viewWindow : Maybe Id -> ( Id, Window ) -> Html Msg
+viewWindow topWindow ( id, window ) =
     Html.map
         (WindowMsg id)
-        (Window.view window)
+        (Window.view (topWindow == Just id) window)
