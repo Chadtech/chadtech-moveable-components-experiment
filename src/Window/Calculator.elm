@@ -79,7 +79,11 @@ fromFloat fl model =
     { card = model.card
     , fieldInt = int
     , fieldDecimal =
-        floor (decimal * toFloat (10 ^ -(floor <| logBase 10 decimal)))
+        if decimal == 0 then
+            0
+
+        else
+            floor (decimal * toFloat (10 ^ -(floor <| logBase 10 decimal)))
     , decimalMode = False
     , calculation = None
     }
@@ -116,7 +120,11 @@ fieldDecimalToFloat model =
         fdfl =
             toFloat model.fieldDecimal
     in
-    fdfl / toFloat (10 ^ ((floor <| logBase 10 fdfl) + 1))
+    if fdfl == 0 then
+        0
+
+    else
+        fdfl / toFloat (10 ^ ((floor <| logBase 10 fdfl) + 1))
 
 
 type Calculation
