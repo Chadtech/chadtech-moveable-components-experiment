@@ -1,5 +1,6 @@
 module Model exposing
     ( Model
+    , encode
     , fromFlags
     , initCalculatorWindow
     , initTextWriterWindow
@@ -23,6 +24,7 @@ import Db exposing (Db)
 import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Id exposing (Id)
+import Json.Encode as E
 import List.Extra
 import Random exposing (Seed)
 import Session exposing (Session)
@@ -41,9 +43,9 @@ type alias Model =
 
 fromFlags : Flags -> Model
 fromFlags flags =
-    { windows = Db.empty
+    { windows = flags.windows
     , windowOrder = []
-    , savedWindows = Dict.empty
+    , savedWindows = flags.savedWindows
     , topWindow = Nothing
     , session =
         { seed = flags.seed
@@ -205,3 +207,41 @@ initCalculatorWindowHelper id session =
         |> Window.Calculator
         |> Db.insert id
         |> mapWindows
+
+
+encode : Model -> E.Value
+encode model =
+    [ ( "windows", encodeWindows model.windows )
+    , ( "saved-windows", encodeSavedWindows model.savedWindows )
+    ]
+        |> E.object
+
+
+encodeSavedWindows : Dict String ( Id, Window ) -> E.Value
+encodeSavedWindows savedWindows_ =
+    savedWindows_
+        |> Dict.toList
+        |> E.list encodeSavedWindow
+
+
+encodeSavedWindow : ( String, ( Id, Window ) ) -> E.Value
+encodeSavedWindow ( fileName, window ) =
+    [ ( "file-name", E.string fileName )
+    , ( "data", encodeWindow window )
+    ]
+        |> E.object
+
+
+encodeWindows : Db Window -> E.Value
+encodeWindows windows_ =
+    windows_
+        |> Db.toList
+        |> E.list encodeWindow
+
+
+encodeWindow : ( Id, Window ) -> E.Value
+encodeWindow ( id, window ) =
+    [ ( "id", Id.encode id )
+    , ( "data", Window.encode window )
+    ]
+        |> E.object

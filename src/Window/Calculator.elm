@@ -2,6 +2,8 @@ module Window.Calculator exposing
     ( Model
     , Msg
     , cardStyle
+    , decoder
+    , encode
     , init
     , mapCard
     , title
@@ -16,6 +18,9 @@ import Html.Grid as Grid
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes as Attrs
 import Html.Styled.Events as Events
+import Json.Decode as D exposing (Decoder)
+import Json.Decode.Pipeline as JDP
+import Json.Encode as E
 import Session exposing (Session)
 import Style.Units as Units
 import View.Button as Button
@@ -432,3 +437,16 @@ field model =
     Input.view
         [ textAlign right ]
         [ Attrs.value (fieldToString model) ]
+
+
+encode : Model -> E.Value
+encode model =
+    [ ( "card", Card.encode model.card ) ]
+        |> E.object
+
+
+decoder : Decoder Model
+decoder =
+    Card.decoder
+        |> D.field "card"
+        |> D.map initFromCard

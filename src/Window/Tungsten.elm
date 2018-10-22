@@ -2,6 +2,8 @@ module Window.Tungsten exposing
     ( Model
     , Msg
     , cardStyle
+    , decoder
+    , encode
     , init
     , mapCard
     , title
@@ -16,7 +18,9 @@ import Html.Grid as Grid
 import Html.Styled as Html exposing (Attribute, Html)
 import Html.Styled.Attributes as Attrs
 import Html.Styled.Events as Events
-import Json.Decode as D
+import Json.Decode as D exposing (Decoder)
+import Json.Decode.Pipeline as JDP
+import Json.Encode as E
 import Session exposing (Session)
 import Style
 import Style.Units as Units
@@ -153,3 +157,19 @@ urlView model =
         [ Attrs.value model.urlField
         , Events.onInput UrlFieldUpdated
         ]
+
+
+encode : Model -> E.Value
+encode model =
+    [ ( "card", Card.encode model.card )
+    , ( "url", E.string model.url )
+    ]
+        |> E.object
+
+
+decoder : Decoder Model
+decoder =
+    D.succeed Model
+        |> JDP.required "card" Card.decoder
+        |> JDP.required "url" D.string
+        |> JDP.required "url" D.string

@@ -1,6 +1,8 @@
 module Data.Window.Welcome exposing
     ( Model
     , cardStyle
+    , decoder
+    , encode
     , id
     , init
     , mapCard
@@ -11,6 +13,9 @@ import Css exposing (..)
 import Data.Position as Position
 import Data.Size as Size exposing (Size)
 import Id exposing (Id)
+import Json.Decode as D exposing (Decoder)
+import Json.Decode.Pipeline as JDP
+import Json.Encode as E
 import Session exposing (Session)
 import Style.Units as Units
 import View.Card as Card
@@ -62,3 +67,19 @@ cardStyle _ =
 width : Float
 width =
     Units.size10
+
+
+
+-- ENCODE --
+
+
+encode : Model -> E.Value
+encode model =
+    [ ( "card", Card.encode model.card ) ]
+        |> E.object
+
+
+decoder : Decoder Model
+decoder =
+    D.succeed Model
+        |> JDP.required "card" Card.decoder

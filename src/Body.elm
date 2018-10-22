@@ -78,7 +78,12 @@ view model =
         |> Html.section
             [ Attrs.css
                 [ containerStyle
-                , backgroundImage (url "https://upload.wikimedia.org/wikipedia/commons/1/17/FLW_Gammage_Auditorium_ASU_PHX_AZ_20186.JPG")
+                , [ "url("
+                  , "https://upload.wikimedia.org/wikipedia/commons/1/17/FLW_Gammage_Auditorium_ASU_PHX_AZ_20186.JPG"
+                  , ") no-repeat center center fixed"
+                  ]
+                    |> String.concat
+                    |> property "background"
                 ]
             ]
 

@@ -82,8 +82,9 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         HeaderMsg subMsg ->
-            Header.update subMsg model
-                |> R2.withNoCmd
+            model
+                |> Header.update subMsg
+                |> R2.mapCmd HeaderMsg
 
         BodyMsg subMsg ->
             Body.update subMsg model

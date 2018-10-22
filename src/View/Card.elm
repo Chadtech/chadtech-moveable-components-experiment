@@ -4,6 +4,8 @@ module View.Card exposing
     , Payload
     , body
     , closeButton
+    , decoder
+    , encode
     , header
     , headerContent
     , headerMouseEvents
@@ -28,6 +30,8 @@ import Html.Styled as Html exposing (Attribute, Html, node)
 import Html.Styled.Attributes as Attrs exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Json.Decode as D exposing (Decoder)
+import Json.Decode.Pipeline as JDP
+import Json.Encode as E
 import Style as Style
 import Style.Units as Units
 import View.Button as Button
@@ -293,3 +297,19 @@ bodyStyle =
     , flexDirection column
     ]
         |> Css.batch
+
+
+encode : Model -> E.Value
+encode model =
+    [ ( "x", E.float model.x )
+    , ( "y", E.float model.y )
+    ]
+        |> E.object
+
+
+decoder : Decoder Model
+decoder =
+    D.succeed Model
+        |> JDP.required "x" D.float
+        |> JDP.required "y" D.float
+        |> JDP.hardcoded ReadyForClick

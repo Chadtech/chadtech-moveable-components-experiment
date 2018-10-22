@@ -8,8 +8,7 @@ import Json.Encode as E exposing (Value)
 
 
 type JsMsg
-    = ConsoleLog String
-    | Square Int
+    = SaveModel E.Value
 
 
 toCmd : String -> Value -> Cmd msg
@@ -29,11 +28,8 @@ noPayload type_ =
 send : JsMsg -> Cmd msg
 send msg =
     case msg of
-        ConsoleLog str ->
-            toCmd "consoleLog" (E.string str)
-
-        Square int ->
-            toCmd "square" (E.int int)
+        SaveModel modelJson ->
+            toCmd "saveModel" modelJson
 
 
 port toJs : Value -> Cmd msg

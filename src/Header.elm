@@ -15,6 +15,8 @@ import Html.Styled.Attributes as Attrs
 import Html.Styled.Events as Events
 import Id exposing (Id)
 import Model exposing (Model)
+import Ports
+import Return2 as R2
 import Style.Units as Units
 import View.Button as Button
 import Window
@@ -34,21 +36,28 @@ type Msg
 -- UPDATE --
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CtClicked ->
             if Db.member Welcome.id model.windows then
                 Model.setTopWindow Welcome.id model
+                    |> R2.withNoCmd
 
             else
                 Model.initWelcomeWindow model
+                    |> R2.withNoCmd
 
         ProgramButtonClicked id ->
             Model.setTopWindow id model
+                |> R2.withNoCmd
 
         SaveClicked ->
             model
+                |> Model.encode
+                |> Ports.SaveModel
+                |> Ports.send
+                |> R2.withModel model
 
 
 
@@ -104,6 +113,7 @@ saveButton =
             , margin (px Units.size0)
             , height initial
             ]
+        , Events.onClick SaveClicked
         ]
         "save"
 

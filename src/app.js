@@ -4,34 +4,43 @@ var app = Elm.Main.init({
 		windowSize: {
 			width: window.innerWidth,
 			height: window.innerHeight
-		}
+		},
+		model: getStoredModel()
 	}
 });
 
-// function toElm(type, payload) {
-// 	app.ports.fromJs.send({
-// 		type: type,
-// 		payload: payload
-// 	});
-// }
+function getStoredModel() {
+	var modelStr = localStorage.getItem("model");
+	if (modelStr === null) {
+		return null;
+	} else {
+		return JSON.parse(modelStr);
+	}
+}
 
-// function square(n) {
-// 	toElm("square computed", n * n);
-// }
+function toElm(type, payload) {
+	app.ports.fromJs.send({
+		type: type,
+		payload: payload
+	});
+}
 
-// var actions = {
-// 	consoleLog: console.log,
-// 	square: square
-// }
+function saveModel(model) {
+	localStorage.setItem("model", JSON.stringify(model))
+}
 
-// function jsMsgHandler(msg) {
-// 	var action = actions[msg.type];
-// 	if (typeof action === "undefined") {
-// 		console.log("Unrecognized js msg type ->", msg.type);
-// 		return;
-// 	}
-// 	action(msg.payload);
-// }
+var actions = {
+	saveModel
+}
 
-// app.ports.toJs.subscribe(jsMsgHandler)
+function jsMsgHandler(msg) {
+	var action = actions[msg.type];
+	if (typeof action === "undefined") {
+		console.log("Unrecognized js msg type ->", msg.type);
+		return;
+	}
+	action(msg.payload);
+}
+
+app.ports.toJs.subscribe(jsMsgHandler)
 

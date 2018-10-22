@@ -2,6 +2,8 @@ module Data.Window exposing
     ( Window(..)
     , cardModel
     , cardStyle
+    , decoder
+    , encode
     , mapCalculator
     , mapCard
     , mapTextWriter
@@ -13,6 +15,8 @@ module Data.Window exposing
 import Css exposing (Style)
 import Data.Window.TextWriter as TextWriter
 import Data.Window.Welcome as Welcome
+import Json.Decode as D exposing (Decoder)
+import Json.Encode as E
 import View.Card as Card
 import Window.Calculator as Calculator
 import Window.Tungsten as Tungsten
@@ -135,3 +139,64 @@ mapCard f window =
 
         Calculator model ->
             Calculator (Calculator.mapCard f model)
+
+
+encode : Window -> E.Value
+encode window =
+    case window of
+        Welcome model ->
+            [ ( "type", E.string "welcome" )
+            , ( "data", Welcome.encode model )
+            ]
+                |> E.object
+
+        TextWriter model ->
+            [ ( "type", E.string "text-writer" )
+            , ( "data", TextWriter.encode model )
+            ]
+                |> E.object
+
+        Tungsten model ->
+            [ ( "type", E.string "tungsten" )
+            , ( "data", Tungsten.encode model )
+            ]
+                |> E.object
+
+        Calculator model ->
+            [ ( "type", E.string "calculator" )
+            , ( "data", Calculator.encode model )
+            ]
+                |> E.object
+
+
+decoder : Decoder Window
+decoder =
+    D.string
+        |> D.field "type"
+        |> D.andThen decoderFromType
+
+
+dataDecoder : (a -> Window) -> Decoder a -> Decoder Window
+dataDecoder windowCtor windowModelDecoder =
+    windowModelDecoder
+        |> D.field "data"
+        |> D.map windowCtor
+
+
+decoderFromType : String -> Decoder Window
+decoderFromType type_ =
+    case type_ of
+        "welcome" ->
+            dataDecoder Welcome Welcome.decoder
+
+        "text-writer" ->
+            dataDecoder TextWriter TextWriter.decoder
+
+        "tungsten" ->
+            dataDecoder Tungsten Tungsten.decoder
+
+        "calculator" ->
+            dataDecoder Calculator Calculator.decoder
+
+        _ ->
+            D.fail "unrecognized window type"

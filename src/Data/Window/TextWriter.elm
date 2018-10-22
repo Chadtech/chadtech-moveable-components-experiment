@@ -1,6 +1,8 @@
 module Data.Window.TextWriter exposing
     ( Model
     , cardStyle
+    , decoder
+    , encode
     , init
     , mapCard
     , title
@@ -9,6 +11,9 @@ module Data.Window.TextWriter exposing
 import Css exposing (..)
 import Data.Position as Position
 import Data.Size as Size exposing (Size)
+import Json.Decode as D exposing (Decoder)
+import Json.Decode.Pipeline as JDP
+import Json.Encode as E
 import Session exposing (Session)
 import Style.Units as Units
 import View.Card as Card
@@ -58,3 +63,20 @@ width =
 height : Float
 height =
     568
+
+
+encode : Model -> E.Value
+encode model =
+    [ ( "card", Card.encode model.card )
+    , ( "text", E.string model.text )
+    , ( "file-name", E.string model.fileName )
+    ]
+        |> E.object
+
+
+decoder : Decoder Model
+decoder =
+    D.succeed Model
+        |> JDP.required "card" Card.decoder
+        |> JDP.required "text" D.string
+        |> JDP.required "file-name" D.string
