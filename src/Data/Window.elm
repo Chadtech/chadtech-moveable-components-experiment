@@ -9,12 +9,14 @@ module Data.Window exposing
     , mapTextWriter
     , mapTungsten
     , mapWelcome
+    , readme
     , title
     )
 
 import Css exposing (Style)
 import Data.Window.TextWriter as TextWriter
 import Data.Window.Welcome as Welcome
+import Id exposing (Id)
 import Json.Decode as D exposing (Decoder)
 import Json.Encode as E
 import View.Card as Card
@@ -139,6 +141,11 @@ mapCard f window =
 
         Calculator model ->
             Calculator (Calculator.mapCard f model)
+
+
+readme : ( Id, Window )
+readme =
+    ( Id.fromString "readme", TextWriter TextWriter.readme )
 
 
 encode : Window -> E.Value

@@ -48,8 +48,9 @@ type Msg
 init : Session -> Model
 init session =
     let
+        url : String
         url =
-            "http://www.4chan.org/g"
+            "http://www.ct-os.us"
     in
     { card =
         session.windowSize
@@ -108,10 +109,10 @@ height =
 title : Model -> String
 title model =
     if String.length model.url > 16 then
-        "Tungsten .." ++ String.right 14 model.url
+        "tungsten .." ++ String.right 14 model.url
 
     else
-        "Tungsten " ++ model.url
+        "tungsten " ++ model.url
 
 
 view : Model -> List (Html Msg)

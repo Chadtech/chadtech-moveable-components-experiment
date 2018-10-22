@@ -5,6 +5,7 @@ module Data.Window.TextWriter exposing
     , encode
     , init
     , mapCard
+    , readme
     , title
     )
 
@@ -63,6 +64,15 @@ width =
 height : Float
 height =
     568
+
+
+readme : Model
+readme =
+    { card =
+        Card.initFromPosition { x = 50, y = 50 }
+    , text = """This is ct-os. Its like a little operating system in your web browser. Its just something I made for fun, and to act as a test-bed for different programming techniques I want to practice."""
+    , fileName = "readme"
+    }
 
 
 encode : Model -> E.Value

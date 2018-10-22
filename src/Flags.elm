@@ -40,7 +40,7 @@ windowsDecoder =
 
 savedWindowsDecoder : Decoder (Dict String ( Id, Window ))
 savedWindowsDecoder =
-    [ D.null Dict.empty
+    [ D.null defaultSavedWindows
     , D.map2 Tuple.pair
         (D.field "file-name" D.string)
         (D.field "data" idWindowPairDecoder)
@@ -49,6 +49,12 @@ savedWindowsDecoder =
         |> D.field "saved-windows"
     ]
         |> D.oneOf
+
+
+defaultSavedWindows : Dict String ( Id, Window )
+defaultSavedWindows =
+    [ ( "readme", Window.readme ) ]
+        |> Dict.fromList
 
 
 idWindowPairDecoder : Decoder ( Id, Window )
