@@ -8,28 +8,32 @@ module Model exposing
     , mapSession
     , mapWindow
     , mapWindows
+    , openSavedWindow
     , removeWindow
+    , saveWindow
     , setTopWindow
     , setWindow
     , windows
     )
 
 import Data.Window as Window exposing (Window)
+import Data.Window.TextWriter as TextWriter
 import Data.Window.Welcome as Welcome
 import Db exposing (Db)
+import Dict exposing (Dict)
 import Flags exposing (Flags)
 import Id exposing (Id)
 import List.Extra
 import Random exposing (Seed)
 import Session exposing (Session)
 import Window.Calculator as Calculator
-import Window.TextWriter as TextWriter
 import Window.Tungsten as Tungsten
 
 
 type alias Model =
     { windows : Db Window
     , windowOrder : List Id
+    , savedWindows : Dict String ( Id, Window )
     , topWindow : Maybe Id
     , session : Session
     }
@@ -39,6 +43,7 @@ fromFlags : Flags -> Model
 fromFlags flags =
     { windows = Db.empty
     , windowOrder = []
+    , savedWindows = Dict.empty
     , topWindow = Nothing
     , session =
         { seed = flags.seed
@@ -77,6 +82,29 @@ mapWindow id f model =
 setWindow : Id -> Window -> Model -> Model
 setWindow id window model =
     { model | windows = Db.insert id window model.windows }
+
+
+saveWindow : String -> ( Id, Window ) -> Model -> Model
+saveWindow fileName window model =
+    { model
+        | savedWindows =
+            Dict.insert
+                fileName
+                window
+                model.savedWindows
+    }
+
+
+openSavedWindow : String -> Model -> Model
+openSavedWindow fileName model =
+    case Dict.get fileName model.savedWindows of
+        Just ( id, window ) ->
+            model
+                |> setWindow id window
+                |> setTopWindow id
+
+        Nothing ->
+            model
 
 
 removeWindow : Id -> Model -> Model

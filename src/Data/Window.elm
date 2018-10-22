@@ -11,10 +11,10 @@ module Data.Window exposing
     )
 
 import Css exposing (Style)
+import Data.Window.TextWriter as TextWriter
 import Data.Window.Welcome as Welcome
 import View.Card as Card
 import Window.Calculator as Calculator
-import Window.TextWriter as TextWriter
 import Window.Tungsten as Tungsten
 
 

@@ -1,97 +1,74 @@
 module Window.TextWriter exposing
-    ( Model
-    , Msg
-    , cardStyle
-    , init
-    , mapCard
-    , title
+    ( Msg
     , update
     , view
     )
 
 import Css exposing (..)
-import Data.Position as Position
-import Data.Size as Size exposing (Size)
+import Data.Window as Window
+import Data.Window.TextWriter exposing (Model)
 import Html.Grid as Grid
 import Html.Styled as Html exposing (Attribute, Html)
+import Html.Styled.Attributes as Attrs
 import Html.Styled.Events as Events
+import Id exposing (Id)
+import Model as Main
 import Session exposing (Session)
 import Style.Units as Units
+import View.Button as Button
 import View.Card as Card
 import View.Input as Input
 
 
-type alias Model =
-    { card : Card.Model
-    , text : String
-    }
-
-
 type Msg
     = TextareaUpdated String
-
-
-init : Session -> Model
-init session =
-    { card =
-        session.windowSize
-            |> Size.center
-            |> Position.subtractFromX (width / 2)
-            |> Position.subtractFromY (height / 2)
-            |> Card.initFromPosition
-    , text = ""
-    }
-
-
-mapCard : (Card.Model -> Card.Model) -> Model -> Model
-mapCard f model =
-    { model | card = f model.card }
+    | FileNameUpdated String
+    | SaveClicked
 
 
 
 -- UPDATE --
 
 
-update : Msg -> Model -> Model
-update msg model =
+update : Msg -> Main.Model -> Id -> Model -> ( Main.Model, Model )
+update msg mainModel id model =
     case msg of
         TextareaUpdated str ->
-            { model | text = str }
+            ( mainModel
+            , { model | text = str }
+            )
 
+        FileNameUpdated str ->
+            ( mainModel
+            , { model | fileName = str }
+            )
 
-
--- STYLE --
-
-
-cardStyle : Model -> Style
-cardStyle _ =
-    [ Css.width (px width) ]
-        |> Css.batch
-
-
-width : Float
-width =
-    Units.size10
-
-
-height : Float
-height =
-    568
+        SaveClicked ->
+            ( Main.saveWindow
+                model.fileName
+                ( id, Window.TextWriter model )
+                mainModel
+            , model
+            )
 
 
 
 -- VIEW --
 
 
-title : Model -> String
-title _ =
-    "text writer"
-
-
 view : Model -> List (Html Msg)
 view model =
     [ Card.body
         [ Grid.row
+            [ marginBottom (px Units.size0) ]
+            [ Grid.column
+                [ paddingRight (px Units.size0) ]
+                [ fileNameField model ]
+            , Grid.column
+                [ flex none ]
+                [ saveButton ]
+            ]
+        , Grid.row
             []
             [ Grid.column
                 []
@@ -99,6 +76,24 @@ view model =
             ]
         ]
     ]
+
+
+fileNameField : Model -> Html Msg
+fileNameField model =
+    Input.view
+        []
+        [ Attrs.value model.fileName
+        , Events.onInput FileNameUpdated
+        ]
+
+
+saveButton : Html Msg
+saveButton =
+    Button.view
+        [ Attrs.css [ Button.styles ]
+        , Events.onClick SaveClicked
+        ]
+        "save"
 
 
 textView : Model -> Html Msg

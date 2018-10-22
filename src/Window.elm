@@ -98,11 +98,17 @@ updateWelcome id msg model =
 
 
 updateTextWriter : Id -> TextWriter.Msg -> Model -> Model
-updateTextWriter id msg =
-    msg
-        |> TextWriter.update
-        |> Window.mapTextWriter
-        |> Model.mapWindow id
+updateTextWriter id msg model =
+    case Db.get model.windows id of
+        Just (TextWriter textWriterModel) ->
+            let
+                ( newMainModel, newTextWriterModel ) =
+                    TextWriter.update msg model id textWriterModel
+            in
+            Model.setWindow id (TextWriter newTextWriterModel) newMainModel
+
+        _ ->
+            model
 
 
 updateTungsten : Id -> Tungsten.Msg -> Model -> Model

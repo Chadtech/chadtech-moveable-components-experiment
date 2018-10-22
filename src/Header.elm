@@ -9,6 +9,7 @@ import Css exposing (..)
 import Data.Window as Window exposing (Window)
 import Data.Window.Welcome as Welcome
 import Db
+import Html.Grid as Grid
 import Html.Styled as Html exposing (Attribute, Html)
 import Html.Styled.Attributes as Attrs
 import Html.Styled.Events as Events
@@ -26,6 +27,7 @@ import Window
 type Msg
     = CtClicked
     | ProgramButtonClicked Id
+    | SaveClicked
 
 
 
@@ -45,6 +47,9 @@ update msg model =
         ProgramButtonClicked id ->
             Model.setTopWindow id model
 
+        SaveClicked ->
+            model
+
 
 
 -- VIEW --
@@ -61,11 +66,23 @@ view model =
             , displayFlex
             ]
         ]
-        (viewContent model)
+        [ Grid.row
+            [ width (pct 100) ]
+            [ Grid.column
+                [ flex none ]
+                [ ctButton ]
+            , Grid.column
+                []
+                (viewPrograms model)
+            , Grid.column
+                [ flex none ]
+                [ saveButton ]
+            ]
+        ]
 
 
-viewContent : Model -> List (Html Msg)
-viewContent model =
+ctButton : Html Msg
+ctButton =
     Button.view
         [ Attrs.css
             [ Button.styles
@@ -77,7 +94,18 @@ viewContent model =
         , Events.onClick CtClicked
         ]
         "Ct"
-        :: viewPrograms model
+
+
+saveButton : Html Msg
+saveButton =
+    Button.view
+        [ Attrs.css
+            [ Button.styles
+            , margin (px Units.size0)
+            , height initial
+            ]
+        ]
+        "save"
 
 
 viewPrograms : Model -> List (Html Msg)

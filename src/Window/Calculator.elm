@@ -36,6 +36,16 @@ type alias Model =
     }
 
 
+flipSign : Model -> Model
+flipSign model =
+    { model | fieldInt = -1 * model.fieldInt }
+
+
+turnOffDecimalMode : Model -> Model
+turnOffDecimalMode model =
+    { model | decimalMode = False }
+
+
 fieldToString : Model -> String
 fieldToString model =
     [ String.fromInt model.fieldInt
@@ -58,13 +68,13 @@ fromFloat fl model =
 
         decimal : Float
         decimal =
-            fl - toFloat int
+            (toFloat <| Basics.round (1000 * (fl - toFloat int)))
+                / 1000
     in
     { card = model.card
     , fieldInt = int
     , fieldDecimal =
-        Basics.round
-            (decimal ^ logBase 10 decimal)
+        floor (decimal * toFloat (10 ^ -(floor <| logBase 10 decimal)))
     , decimalMode = False
     , calculation = None
     }
@@ -101,7 +111,7 @@ fieldDecimalToFloat model =
         fdfl =
             toFloat model.fieldDecimal
     in
-    fdfl / logBase 10 fdfl
+    fdfl / toFloat (10 ^ ((floor <| logBase 10 fdfl) + 1))
 
 
 type Calculation
@@ -141,6 +151,7 @@ type Msg
     | EqualsClicked
     | DecimalClicked
     | ClearClicked
+    | SignFlipClicked
 
 
 init : Session -> Model
@@ -177,10 +188,14 @@ update msg model =
     case msg of
         NumberInput int ->
             if model.decimalMode then
-                { model
-                    | fieldDecimal =
-                        model.fieldDecimal * 10 + int
-                }
+                if 10000 > model.fieldDecimal then
+                    { model
+                        | fieldDecimal =
+                            model.fieldDecimal * 10 + int
+                    }
+
+                else
+                    model
 
             else
                 { model
@@ -190,15 +205,19 @@ update msg model =
 
         OperationClicked Multiplication ->
             setCalculation Multiply model
+                |> turnOffDecimalMode
 
         OperationClicked Division ->
             setCalculation Divide model
+                |> turnOffDecimalMode
 
         OperationClicked Addition ->
             setCalculation Add model
+                |> turnOffDecimalMode
 
         OperationClicked Subtraction ->
             setCalculation Subtract model
+                |> turnOffDecimalMode
 
         EqualsClicked ->
             case model.calculation of
@@ -231,6 +250,9 @@ update msg model =
         ClearClicked ->
             clear model
 
+        SignFlipClicked ->
+            flipSign model
+
 
 
 -- STYLE --
@@ -244,7 +266,7 @@ cardStyle _ =
 
 width : Float
 width =
-    Units.size8
+    Units.size7
 
 
 height : Float
@@ -275,6 +297,21 @@ view model =
             [ marginBottom (px Units.size0) ]
             [ Grid.column
                 [ marginRight (px Units.size0) ]
+                [ clearButton ]
+            , Grid.column
+                [ marginRight (px Units.size0) ]
+                [ flipSignButton ]
+            , Grid.column
+                [ marginRight (px Units.size0) ]
+                [ decimalButton ]
+            , Grid.column
+                []
+                [ operationButton Division ]
+            ]
+        , Grid.row
+            [ marginBottom (px Units.size0) ]
+            [ Grid.column
+                [ marginRight (px Units.size0) ]
                 [ numberButton 7 ]
             , Grid.column
                 [ marginRight (px Units.size0) ]
@@ -284,7 +321,7 @@ view model =
                 [ numberButton 9 ]
             , Grid.column
                 []
-                [ operationButton Division ]
+                [ operationButton Multiplication ]
             ]
         , Grid.row
             [ marginBottom (px Units.size0) ]
@@ -299,7 +336,7 @@ view model =
                 [ numberButton 6 ]
             , Grid.column
                 []
-                [ operationButton Multiplication ]
+                [ operationButton Subtraction ]
             ]
         , Grid.row
             [ marginBottom (px Units.size0) ]
@@ -314,50 +351,80 @@ view model =
                 [ numberButton 3 ]
             , Grid.column
                 []
-                [ operationButton Subtraction ]
+                [ operationButton Addition ]
             ]
         , Grid.row
             [ marginBottom (px Units.size0) ]
             [ Grid.column
                 [ flex none
-                , marginRight (px Units.size0)
                 , Css.width (pct 75)
                 ]
                 [ numberButton 0 ]
             , Grid.column
                 [ flex none
                 , Css.width (pct 25)
+                , paddingLeft (px Units.size0)
                 ]
-                [ operationButton Addition ]
+                [ equalsButton ]
             ]
         ]
     ]
 
 
+clearButton : Html Msg
+clearButton =
+    button
+        ClearClicked
+        "c"
+
+
+flipSignButton : Html Msg
+flipSignButton =
+    button
+        SignFlipClicked
+        "+/-"
+
+
+equalsButton : Html Msg
+equalsButton =
+    button
+        EqualsClicked
+        "="
+
+
+decimalButton : Html Msg
+decimalButton =
+    button
+        DecimalClicked
+        "."
+
+
 operationButton : OperationButton -> Html Msg
 operationButton ob =
-    Button.view
-        [ Attrs.css
-            [ Button.styles
-            , minWidth (px Units.size0)
-            , flex (int 1)
-            ]
-        , Events.onClick (OperationClicked ob)
-        ]
+    button
+        (OperationClicked ob)
         (operationButtonToString ob)
 
 
 numberButton : Int -> Html Msg
 numberButton n =
+    button
+        (NumberInput n)
+        (String.fromInt n)
+
+
+button : msg -> String -> Html msg
+button msg label =
     Button.view
         [ Attrs.css
             [ Button.styles
             , minWidth (px Units.size0)
             , flex (int 1)
+            , padding zero
             ]
-        , Events.onClick (NumberInput n)
+        , Events.onClick msg
         ]
-        (String.fromInt n)
+        label
 
 
 field : Model -> Html Msg
