@@ -1,5 +1,6 @@
 module Data.Window exposing
     ( Window(..)
+    , bye
     , cardModel
     , cardStyle
     , decoder
@@ -146,6 +147,11 @@ mapCard f window =
 readme : ( Id, Window )
 readme =
     ( Id.fromString "readme", TextWriter TextWriter.readme )
+
+
+bye : Window
+bye =
+    TextWriter TextWriter.bye
 
 
 encode : Window -> E.Value

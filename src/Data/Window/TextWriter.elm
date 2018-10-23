@@ -1,5 +1,6 @@
 module Data.Window.TextWriter exposing
     ( Model
+    , bye
     , cardStyle
     , decoder
     , encode
@@ -72,6 +73,16 @@ readme =
         Card.initFromPosition { x = 50, y = 50 }
     , text = """This is ct-os. Its like a little operating system in your web browser. Its just something I made for fun, and to act as a test-bed for different programming techniques I want to practice."""
     , fileName = "readme"
+    }
+
+
+bye : Model
+bye =
+    { card =
+        Card.initFromPosition
+            { x = 100, y = 100 }
+    , text = """mrew"""
+    , fileName = "bye"
     }
 
 

@@ -99,12 +99,14 @@ saveButton =
 textView : Model -> Html Msg
 textView model =
     Html.textarea
-        textareaAttrs
-        [ Html.text model.text ]
+        (textareaAttrs model.text)
+        []
 
 
-textareaAttrs : List (Attribute Msg)
-textareaAttrs =
-    [ Events.onInput TextareaUpdated ]
+textareaAttrs : String -> List (Attribute Msg)
+textareaAttrs text =
+    [ Events.onInput TextareaUpdated
+    , Attrs.value text
+    ]
         ++ Input.textareaAttrs
             [ minHeight (px Units.size9) ]

@@ -29,13 +29,20 @@ decoder =
 
 windowsDecoder : Decoder (Db Window)
 windowsDecoder =
-    [ D.null Db.empty
+    [ D.null defaultWindows
     , idWindowPairDecoder
         |> D.list
         |> D.map Db.fromList
         |> D.field "windows"
     ]
         |> D.oneOf
+
+
+defaultWindows : Db Window
+defaultWindows =
+    []
+        -- [ ( Id.fromString "bye", Window.bye ) ]
+        |> Db.fromList
 
 
 savedWindowsDecoder : Decoder (Dict String ( Id, Window ))
